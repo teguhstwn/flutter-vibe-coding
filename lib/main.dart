@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'injection.dart' as di;
 import 'core/router/app_router.dart';
 import 'package:flutter_vibe_coding/presentation/cubit/theme_cubit.dart';
+import 'data/models/product_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +15,8 @@ void main() async {
   
   // Initialize Hive
   await Hive.initFlutter();
+  Hive.registerAdapter(ProductModelAdapter());
+  await Hive.openBox<ProductModel>('products');
   
   runApp(
     BlocProvider<ThemeCubit>(
@@ -36,16 +39,17 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-            textTheme: GoogleFonts.outfitTextTheme(
-              Theme.of(context).textTheme,
-            ),
+            textTheme: GoogleFonts.outfitTextTheme(),
           ),
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
+            ),
             textTheme: GoogleFonts.outfitTextTheme(
-              Theme.of(context).textTheme,
+              ThemeData.dark().textTheme,
             ),
           ),
           themeMode: themeMode,
