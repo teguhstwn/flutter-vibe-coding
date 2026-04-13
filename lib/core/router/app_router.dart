@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../presentation/pages/home_page.dart';
 import '../../presentation/pages/billing_page.dart';
 import '../../presentation/pages/product_page.dart';
+import '../../presentation/pages/add_product_page.dart';
 import '../../presentation/pages/settings_page.dart';
 import '../../presentation/pages/shop_page.dart';
 
@@ -37,6 +38,12 @@ final GoRouter router = GoRouter(
       path: '/shop',
       builder: (BuildContext context, GoRouterState state) {
         return const ShopPage();
+      },
+    ),
+    GoRoute(
+      path: '/add-product',
+      builder: (BuildContext context, GoRouterState state) {
+        return const AddProductPage();
       },
     ),
   ],
