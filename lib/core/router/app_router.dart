@@ -6,6 +6,7 @@ import '../../presentation/pages/product_page.dart';
 import '../../presentation/pages/add_product_page.dart';
 import '../../presentation/pages/settings_page.dart';
 import '../../presentation/pages/shop_page.dart';
+import '../../domain/entities/product.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/',
@@ -43,7 +44,8 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/add-product',
       builder: (BuildContext context, GoRouterState state) {
-        return const AddProductPage();
+        final product = state.extra as Product?;
+        return AddProductPage(product: product);
       },
     ),
   ],
