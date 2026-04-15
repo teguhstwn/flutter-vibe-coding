@@ -14,8 +14,6 @@ import 'presentation/cubit/theme_cubit.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // Features - Product
-  
   // Data sources
   sl.registerLazySingleton<ProductLocalDataSource>(
     () => ProductLocalDataSourceImpl(productBox: Hive.box<ProductModel>('products')),
@@ -34,7 +32,9 @@ Future<void> init() async {
 
   // BLoC / Cubit
   sl.registerFactory(() => ThemeCubit());
-  sl.registerLazySingleton(
+
+  // ✅ UBAH DARI registerLazySingleton MENJADI registerFactory
+  sl.registerFactory(
     () => ProductBloc(
       getProducts: sl(),
       addProduct: sl(),
@@ -42,6 +42,4 @@ Future<void> init() async {
       deleteProduct: sl(),
     ),
   );
-
-  // External
 }
