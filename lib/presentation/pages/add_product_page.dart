@@ -8,7 +8,8 @@ import '../../../domain/entities/product.dart';
 import '../../../injection.dart';
 
 class AddProductPage extends StatefulWidget {
-  const AddProductPage({super.key});
+  final Product? product;
+  const AddProductPage({super.key, this.product});
 
   @override
   State<AddProductPage> createState() => _AddProductPageState();
@@ -20,6 +21,19 @@ class _AddProductPageState extends State<AddProductPage> {
   final _priceController = TextEditingController();
   final _stockController = TextEditingController();
   final _barcodeController = TextEditingController();
+
+  bool get isEdit => widget.product != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (isEdit) {
+      _nameController.text = widget.product!.name;
+      _barcodeController.text = widget.product!.barcodeValue;
+      _priceController.text = widget.product!.price.toStringAsFixed(0);
+      _stockController.text = widget.product!.stock.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -60,13 +74,16 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<ProductBloc>(),
+    return BlocProvider.value(
+      value: sl<ProductBloc>(),
       child: BlocListener<ProductBloc, ProductState>(
         listener: (context, state) {
-          if (state is ProductAddSuccess) {
+          if (state is ProductAddSuccess || state is ProductUpdateSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Produk berhasil ditambahkan')),
+              SnackBar(
+                  content: Text(isEdit
+                      ? 'Produk berhasil diperbarui'
+                      : 'Produk berhasil ditambahkan')),
             );
             context.pop();
           } else if (state is ProductError) {
@@ -77,7 +94,7 @@ class _AddProductPageState extends State<AddProductPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Tambah Produk'),
+            title: Text(isEdit ? 'Edit Produk' : 'Tambah Produk'),
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -146,16 +163,23 @@ class _AddProductPageState extends State<AddProductPage> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           final product = Product(
-                            id: const Uuid().v4(),
+                            id: isEdit ? widget.product!.id : const Uuid().v4(),
                             name: _nameController.text,
                             price: double.parse(_priceController.text),
                             stock: int.parse(_stockController.text),
                             barcodeValue: _barcodeController.text,
+                            isDeleted: isEdit ? widget.product!.isDeleted : false,
                           );
 
-                          context
-                              .read<ProductBloc>()
-                              .add(AddProductEvent(product));
+                          if (isEdit) {
+                            context
+                                .read<ProductBloc>()
+                                .add(UpdateProductEvent(product));
+                          } else {
+                            context
+                                .read<ProductBloc>()
+                                .add(AddProductEvent(product));
+                          }
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -163,7 +187,7 @@ class _AddProductPageState extends State<AddProductPage> {
                         backgroundColor: Colors.deepPurple,
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Simpan Produk'),
+                      child: Text(isEdit ? 'Update Produk' : 'Simpan Produk'),
                     );
                   }),
                 ],

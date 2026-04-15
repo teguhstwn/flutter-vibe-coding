@@ -15,6 +15,8 @@ class ProductModel extends Product {
   final int stock;
   @HiveField(4)
   final String barcodeValue;
+  @HiveField(5)
+  final bool isDeleted;
 
   const ProductModel({
     required this.id,
@@ -22,13 +24,33 @@ class ProductModel extends Product {
     required this.price,
     required this.stock,
     required this.barcodeValue,
+    this.isDeleted = false,
   }) : super(
           id: id,
           name: name,
           price: price,
           stock: stock,
           barcodeValue: barcodeValue,
+          isDeleted: isDeleted,
         );
+
+  ProductModel copyWith({
+    String? id,
+    String? name,
+    double? price,
+    int? stock,
+    String? barcodeValue,
+    bool? isDeleted,
+  }) {
+    return ProductModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      price: price ?? this.price,
+      stock: stock ?? this.stock,
+      barcodeValue: barcodeValue ?? this.barcodeValue,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
 
   factory ProductModel.fromEntity(Product product) {
     return ProductModel(
@@ -37,6 +59,7 @@ class ProductModel extends Product {
       price: product.price,
       stock: product.stock,
       barcodeValue: product.barcodeValue,
+      isDeleted: product.isDeleted,
     );
   }
 
@@ -47,6 +70,7 @@ class ProductModel extends Product {
       price: price,
       stock: stock,
       barcodeValue: barcodeValue,
+      isDeleted: isDeleted,
     );
   }
 }
