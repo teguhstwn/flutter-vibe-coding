@@ -11,7 +11,7 @@ class ProductPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Bagian ini hanya bertugas menyediakan Bloc
+    // Provider berada di paling atas
     return BlocProvider(
       create: (context) => sl<ProductBloc>()..add(LoadProductsEvent()),
       child: const ProductView(),
@@ -37,7 +37,6 @@ class _ProductViewState extends State<ProductView> {
 
   @override
   Widget build(BuildContext context) {
-    // Sekarang context di sini sudah berada DI BAWAH BlocProvider
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Object? result) {
@@ -69,8 +68,10 @@ class _ProductViewState extends State<ProductView> {
                 onChanged: (value) {
                   if (_debounce?.isActive ?? false) _debounce!.cancel();
                   _debounce = Timer(const Duration(milliseconds: 300), () {
-                    // Berhasil! context sekarang bisa menemukan ProductBloc
-                    context.read<ProductBloc>().add(SearchProductEvent(value));
+                    // ✅ KRUSIAL: Cek mounted agar tidak error saat context sudah hilang
+                    if (mounted) {
+                      context.read<ProductBloc>().add(SearchProductEvent(value));
+                    }
                   });
                 },
               ),
@@ -90,7 +91,7 @@ class _ProductViewState extends State<ProductView> {
                     return const Center(child: Text('Produk tidak ditemukan.'));
                   }
                   if (state is ProductLoaded) {
-                    return _buildProductList(state.products);
+                    return _buildList(state.products);
                   }
                   if (state is ProductError) {
                     return Center(child: Text('Error: ${state.message}'));
@@ -101,12 +102,10 @@ class _ProductViewState extends State<ProductView> {
             ),
           ],
         ),
-
-        /// ➕ ADD BUTTON
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
             await context.push('/add-product');
-            if (context.mounted) {
+            if (mounted) {
               context.read<ProductBloc>().add(LoadProductsEvent());
             }
           },
@@ -123,45 +122,30 @@ class _ProductViewState extends State<ProductView> {
         children: [
           Icon(Icons.inventory_2_outlined, size: 100, color: Colors.grey[400]),
           const SizedBox(height: 16),
-          Text(
-            'Belum ada product, silakan tambah produk baru.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[600], fontSize: 16),
-          ),
+          const Text('Belum ada produk.', style: TextStyle(fontSize: 16)),
         ],
       ),
     );
   }
 
-  Widget _buildProductList(List<Product> products) {
+  Widget _buildList(List<Product> products) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(16),
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
         return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          elevation: 1,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           child: ListTile(
-            title: Text(product.name,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            subtitle: Text('Barcode: ${product.barcodeValue}\nStock: ${product.stock}'),
+            title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('Rp ${product.price.toStringAsFixed(0)}'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Rp ${product.price.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple,
-                        fontSize: 16)),
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue),
                   onPressed: () async {
                     await context.push('/add-product', extra: product);
-                    if (context.mounted) {
-                      context.read<ProductBloc>().add(LoadProductsEvent());
-                    }
+                    if (mounted) context.read<ProductBloc>().add(LoadProductsEvent());
                   },
                 ),
                 IconButton(
@@ -177,33 +161,23 @@ class _ProductViewState extends State<ProductView> {
   }
 
   void _showDeleteDialog(BuildContext context, Product product) {
-    // Simpan referensi bloc sebelum masuk ke dialog
-    final productBloc = context.read<ProductBloc>();
-
+    final bloc = context.read<ProductBloc>(); // Ambil referensi sebelum dialog muncul
     showDialog(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Hapus Produk'),
-          content: Text('Apakah Anda yakin ingin menghapus ${product.name}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Batal'),
-            ),
-            TextButton(
-              onPressed: () {
-                productBloc.add(DeleteProductEvent(product.id));
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Produk berhasil dihapus')),
-                );
-              },
-              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
+      builder: (dContext) => AlertDialog(
+        title: const Text('Hapus?'),
+        content: Text('Hapus ${product.name}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dContext), child: const Text('Batal')),
+          TextButton(
+            onPressed: () {
+              bloc.add(DeleteProductEvent(product.id));
+              Navigator.pop(dContext);
+            },
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }
