@@ -5,4 +5,5 @@ abstract class ProductRepository {
   Future<void> addProduct(Product product);
   Future<void> updateProduct(Product product);
   Future<void> deleteProduct(String id);
+  Future<Product?> getProductByBarcode(String barcode);
 }

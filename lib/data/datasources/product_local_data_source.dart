@@ -6,6 +6,7 @@ abstract class ProductLocalDataSource {
   Future<void> addProduct(ProductModel product);
   Future<void> updateProduct(ProductModel product);
   Future<void> deleteProduct(String id);
+  Future<ProductModel?> getProductByBarcode(String barcode);
 }
 
 class ProductLocalDataSourceImpl implements ProductLocalDataSource {
@@ -34,6 +35,17 @@ class ProductLocalDataSourceImpl implements ProductLocalDataSource {
     if (product != null) {
       final updatedProduct = product.copyWith(isDeleted: true);
       await productBox.put(id, updatedProduct);
+    }
+  }
+
+  @override
+  Future<ProductModel?> getProductByBarcode(String barcode) async {
+    try {
+      return productBox.values.firstWhere(
+        (p) => p.barcodeValue == barcode && !p.isDeleted,
+      );
+    } catch (_) {
+      return null;
     }
   }
 }

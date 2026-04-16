@@ -8,7 +8,9 @@ import 'domain/usecases/add_product.dart';
 import 'domain/usecases/get_products.dart';
 import 'domain/usecases/update_product.dart';
 import 'domain/usecases/delete_product.dart';
+import 'domain/usecases/get_product_by_barcode.dart';
 import 'presentation/bloc/product/product_bloc.dart';
+import 'presentation/bloc/shop/shop_bloc.dart';
 import 'presentation/cubit/theme_cubit.dart';
 
 final sl = GetIt.instance;
@@ -29,6 +31,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddProduct(sl()));
   sl.registerLazySingleton(() => UpdateProduct(sl()));
   sl.registerLazySingleton(() => DeleteProduct(sl()));
+  sl.registerLazySingleton(() => GetProductByBarcode(sl()));
 
   // BLoC / Cubit
   sl.registerFactory(() => ThemeCubit());
@@ -40,6 +43,12 @@ Future<void> init() async {
       addProduct: sl(),
       updateProduct: sl(),
       deleteProduct: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ShopBloc(
+      getProductByBarcode: sl(),
     ),
   );
 }
